@@ -6,19 +6,13 @@ def route_def(pattern)
   mock_app { get(pattern) { } }
 end
 
-class RegexpLookAlike
-  class MatchData
-    def captures
-      ["this", "is", "a", "test"]
-    end
+class PatternLookAlike
+  def to_pattern(*)
+    self
   end
 
-  def match(string)
-    ::RegexpLookAlike::MatchData.new if string == "/this/is/a/test/"
-  end
-
-  def keys
-    ["one", "two", "three", "four"]
+  def params(input)
+    { "one" => "this", "two" => "is", "three" => "a", "four" => "test" }
   end
 end
 
@@ -101,11 +95,11 @@ class RoutingTest < Minitest::Test
 
   it "it handles encoded colons correctly" do
     mock_app {
-      get("/:") { 'a' }
-      get("/a/:") { 'b' }
-      get("/a/:/b") { 'c' }
-      get("/a/b:") { 'd' }
-      get("/a/b: ") { 'e' }
+      get("/\\:") { 'a' }
+      get("/a/\\:") { 'b' }
+      get("/a/\\:/b") { 'c' }
+      get("/a/b\\:") { 'd' }
+      get("/a/b\\: ") { 'e' }
     }
     get '/:'
     assert_equal 200, status
@@ -415,8 +409,8 @@ class RoutingTest < Minitest::Test
     assert_equal 'bob+ross', body
   end
 
-  it "literally matches parens in paths" do
-    route_def '/test(bar)/'
+  it "literally matches parens in paths when escaped" do
+    route_def '/test\(bar\)/'
 
     get '/test(bar)/'
     assert ok?
@@ -584,7 +578,7 @@ class RoutingTest < Minitest::Test
 
   it 'supports regular expression look-alike routes' do
     mock_app {
-      get(RegexpLookAlike.new) do
+      get(PatternLookAlike.new) do
         assert_equal 'this', params[:one]
         assert_equal 'is', params[:two]
         assert_equal 'a', params[:three]
@@ -1403,7 +1397,7 @@ class RoutingTest < Minitest::Test
     end
 
     assert_equal Array, signature.class
-    assert_equal 4, signature.length
+    assert_equal 3, signature.length
     assert list.include?(signature)
   end
 
