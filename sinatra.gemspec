@@ -8,14 +8,14 @@ Gem::Specification.new 'sinatra', Sinatra::VERSION do |s|
   s.email             = "sinatrarb@googlegroups.com"
   s.homepage          = "http://www.sinatrarb.com/"
   s.license           = 'MIT'
-  s.files             = `git ls-files`.split("\n") - %w[.gitignore .travis.yml]
+  s.files = %w(.yardopts AUTHORS.md CHANGELOG.md CONTRIBUTING.md Gemfile LICENSE MAINTENANCE.md Rakefile SECURITY.md sinatra.gemspec) + Dir['README*.md', 'lib/**/*', 'examples/*']
   s.test_files        = s.files.select { |p| p =~ /^test\/.*_test.rb/ }
   s.extra_rdoc_files  = s.files.select { |p| p =~ /^README/ } << 'LICENSE'
   s.rdoc_options      = %w[--line-numbers --inline-source --title Sinatra --main README.rdoc --encoding=UTF-8]
 
   s.required_ruby_version = '>= 2.2.0'
 
-  s.add_dependency 'rack', '~> 2.0.0.alpha'
+  s.add_dependency 'rack', '= 2.0.0.alpha'
   s.add_dependency 'tilt', '~> 2.0'
   s.add_dependency 'rack-protection', '~> 1.5'
   s.add_dependency 'mustermann',  '~> 0.4'

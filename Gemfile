@@ -18,7 +18,6 @@ gem 'tool', '~> 0.2'
 
 if RUBY_ENGINE == 'jruby'
   gem 'nokogiri', '!= 1.5.0'
-  gem 'jruby-openssl'
   gem 'trinidad'
 end
 
@@ -55,6 +54,7 @@ if RUBY_ENGINE == "ruby"
   gem 'erubis'
   gem 'haml', '>= 3.0'
   gem 'sass'
+  gem 'reel-rack'
 end
 
 if RUBY_ENGINE == "rbx"

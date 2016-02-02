@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # external dependencies
 require 'rack'
 require 'tilt'
@@ -271,7 +273,7 @@ module Sinatra
     # Takes Rack routers and reverse proxies into account.
     def uri(addr = nil, absolute = true, add_script_name = true)
       return addr if addr =~ /\A[A-z][A-z0-9\+\.\-]*:/
-      uri = [host = ""]
+      uri = [host = String.new]
       if absolute
         host << "http#{'s' if request.secure?}://"
         if request.forwarded? or request.port != (request.secure? ? 443 : 80)
@@ -345,7 +347,7 @@ module Sinatra
 
     # Set the Content-Disposition to "attachment" with the specified filename,
     # instructing the user agents to prompt to save.
-    def attachment(filename = nil, disposition = 'attachment')
+    def attachment(filename = nil, disposition = :attachment)
       response['Content-Disposition'] = disposition.to_s
       if filename
         params = '; filename="%s"' % File.basename(filename)
@@ -363,8 +365,8 @@ module Sinatra
 
       disposition = opts[:disposition]
       filename    = opts[:filename]
-      disposition = 'attachment' if disposition.nil? and filename
-      filename    = path         if filename.nil?
+      disposition = :attachment if disposition.nil? and filename
+      filename    = path        if filename.nil?
       attachment(filename, disposition) if disposition
 
       last_modified opts[:last_modified] if opts[:last_modified]
@@ -1015,6 +1017,9 @@ module Sinatra
         conditions.each { |c| throw :pass if c.bind(self).call == false }
         block ? block[self, values] : yield(self, values)
       end
+    rescue
+      @env['sinatra.error.params'] = @params
+      raise
     ensure
       @params = original if original
     end
@@ -1098,6 +1103,9 @@ module Sinatra
 
     # Error handling during requests.
     def handle_exception!(boom)
+      if error_params = @env['sinatra.error.params']
+        @params = @params.merge(error_params)
+      end
       @env['sinatra.error'] = boom
 
       if boom.respond_to? :http_status
@@ -1257,13 +1265,13 @@ module Sinatra
         args  = compile! "ERROR", /.*/, block
         codes = codes.map { |c| Array(c) }.flatten
         codes << Exception if codes.empty?
+        codes << Sinatra::NotFound if codes.include?(404)
         codes.each { |c| (@errors[c] ||= []) << args }
       end
 
       # Sugar for `error(404) { ... }`
       def not_found(&block)
         error(404, &block)
-        error(Sinatra::NotFound, &block)
       end
 
       # Define a named template. The block must return the template source.
@@ -1301,7 +1309,7 @@ module Sinatra
           data.each_line do |line|
             lines += 1
             if line =~ /^@@\s*(.*\S)\s*$/
-              template = force_encoding('', encoding)
+              template = force_encoding(String.new, encoding)
               templates[$1.to_sym] = [template, file, lines]
             elsif template
               template << line
